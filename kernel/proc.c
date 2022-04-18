@@ -12,6 +12,9 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+uint tickNum=0;
+uint starttick=0;
+int pauseflag=0;
 int nextpid = 1;
 struct spinlock pid_lock;
 
@@ -652,5 +655,43 @@ procdump(void)
       state = "???";
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
+  }
+}
+
+//pause all cpu processes
+int
+pause_system(int sec){
+  
+  tickNum= 1000000 *sec;
+  starttick = ticks;
+  pauseflag = 1;
+  yield();
+  pauseflag = 0;
+  tickNum = 0;
+  starttick = 0;
+}
+
+//kill all procs except init and shell
+int
+kill_system(void){
+  struct proc *p;
+  int boolean = 0;
+  
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p != initproc  && &p->pid !=2){
+      p->killed = 1;
+      if(p->state == SLEEPING){
+        // Wake process from sleep().
+        p->state = RUNNABLE;
+      }
+      release(&p->lock);
+      boolean = 1;
+    }
+    release(&p->lock);
+  
+  if(boolean=0)
+    return -1;
+  boolean =0;
   }
 }
