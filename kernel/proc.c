@@ -12,6 +12,7 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+int rate=5;
 uint tickNum=0;
 uint starttick=0;
 int pauseflag=0;
@@ -698,3 +699,49 @@ kill_system(void){
   boolean =0;
   }
 }
+
+//Approximate SJF policy .
+void
+scheduler_sjf(void){
+  struct proc *p;
+  struct cpu *c = mycpu();
+  struct proc *cp = 0;
+  //store the min mean ticks value.
+  int mmt= __INT_MAX__;
+  c->proc = 0 ;
+  for(;;){
+    //avoid the deadlock.
+    intr_on();
+    //if system is paused stop running procs.
+    while(pause()==1){
+      ;;
+    }
+    //find the min min ticket.
+    for( p= proc ; p < &proc[NPROC] ; p++){
+      acquire(&p->lock);
+      if(p->state == RUNNABLE && (p->mean_ticks < mmt)){
+        cp=p;
+        mmt= p->mean_ticks;
+      }
+      release(&p->lock);
+    }
+    if(cp !=0){
+      acquire(&p->lock);
+      if(cp->state==RUNNABLE){
+        p->state=RUNNING;
+        c->proc=cp;
+        cp->ticks_start= ticks;
+        swtch(&c->context, &p->context);
+
+        cp->last_ticks= ticks - cp->ticks_start;
+        cp->mean_ticks = ((10-rate)*cp->mean_ticks + cp->last_ticks*rate)/10;
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc=0;
+      }
+      release(&p->lock);
+    }
+  }
+}
+
