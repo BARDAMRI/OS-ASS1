@@ -95,6 +95,9 @@ struct cpu*     getmycpu(void);
 struct proc*    myproc();
 void            procinit(void);
 void            scheduler(void) __attribute__((noreturn));
+void            scheduler_round(void)__attribute__((noreturn));
+void            scheduler_sjf(void)__attribute__((noreturn));
+void            scheduler_fcfs(void)__attribute__((noreturn));
 void            sched(void);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
@@ -106,6 +109,7 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 int             pause_system(int);
 int             kill_system(void);
+int             print_sys_status(void);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

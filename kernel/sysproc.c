@@ -105,7 +105,13 @@ sys_pause_system(void)
   return pause_system(sec);
 }
 uint64
-sys_pause_system(void)
+sys_kill_system(void)
 {
   return kill_system();
+}
+
+uint64
+sys_print_status(void)
+{
+  return print_sys_status();
 }
